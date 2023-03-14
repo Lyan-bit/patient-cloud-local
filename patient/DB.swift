@@ -5,15 +5,15 @@ import SQLite3
 
 class DB {
   let dbPointer : OpaquePointer?
-  static let dbNAME = "patientApp.db"
-  static let dbVERSION = 1
+  static let dbName = "patientApp.db"
+  static let dbVersion = 1
 
-  static let appointmentTABLENAME = "Appointment"
+  static let appointmentTableName = "Appointment"
   static let appointmentID = 0
-  static let appointmentCOLS : [String] = ["TableId", "appointmentId", "code"]
-  static let appointmentNUMBERCOLS = 0
+  static let appointmentCols : [String] = ["TableId", "appointmentId", "code"]
+  static let appointmentNumberCols = 0
 
-  static let appointmentCREATESCHEMA =
+  static let appointmentCreateSchema =
     "create table Appointment (TableId integer primary key autoincrement" + 
         ", appointmentId VARCHAR(50) not null"  +
         ", code VARCHAR(50) not null"  +
@@ -25,7 +25,7 @@ class DB {
   func createDatabase() throws
   { do 
     { 
-    try createTable(table: DB.appointmentCREATESCHEMA)
+    try createTable(table: DB.appointmentCreateSchema)
       print("Created database")
     }
     catch { print("Errors: " + errorMessage) }
@@ -117,35 +117,14 @@ class DB {
   }
 
   func listAppointment() -> [AppointmentVO]
-  { var res : [AppointmentVO] = [AppointmentVO]()
-    let statement = "SELECT * FROM Appointment "
-    let queryStatement = try? prepareStatement(sql: statement)
-    if queryStatement == nil { 
-    	return res
-    }
-    
-    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-    { //let id = sqlite3_column_int(queryStatement, 0)
-      let appointmentvo = AppointmentVO()
-      
-    guard let queryResultAppointmentCOLAPPOINTMENTID = sqlite3_column_text(queryStatement, 1) 
-    else { return res } 
-    let appointmentId = String(cString: queryResultAppointmentCOLAPPOINTMENTID) 
-    appointmentvo.setAppointmentId(x: appointmentId) 
-
-    guard let queryResultAppointmentCOLCODE = sqlite3_column_text(queryStatement, 2) 
-    else { return res } 
-    let code = String(cString: queryResultAppointmentCOLCODE) 
-    appointmentvo.setCode(x: code) 
-
-      res.append(appointmentvo)
-    }
-    sqlite3_finalize(queryStatement)
-    return res
+  { 
+  	let statement = "SELECT * FROM Appointment "
+  	return setDataAppointment(statement: statement)
   }
 
   func createAppointment(appointmentvo : AppointmentVO) throws
   { let insertSQL : String = "INSERT INTO Appointment (appointmentId, code) VALUES (" 
+
      + "'" + appointmentvo.getAppointmentId() + "'" + "," 
      + "'" + appointmentvo.getCode() + "'"
       + ")"
@@ -157,51 +136,15 @@ class DB {
   }
 
   func searchByAppointmentappointmentId(val : String) -> [AppointmentVO]
-	  { var res : [AppointmentVO] = [AppointmentVO]()
-	    let statement : String = "SELECT * FROM Appointment WHERE appointmentId = " + "'" + val + "'" 
-	    let queryStatement = try? prepareStatement(sql: statement)
-	    
-	    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-	    { //let id = sqlite3_column_int(queryStatement, 0)
-	      let appointmentvo = AppointmentVO()
-	      
-	      guard let queryResultAppointmentCOLAPPOINTMENTID = sqlite3_column_text(queryStatement, 4)
-		      else { return res }	      
-		      let appointmentId = String(cString: queryResultAppointmentCOLAPPOINTMENTID)
-		      appointmentvo.setAppointmentId(x: appointmentId)
-	      guard let queryResultAppointmentCOLCODE = sqlite3_column_text(queryStatement, 5)
-		      else { return res }	      
-		      let code = String(cString: queryResultAppointmentCOLCODE)
-		      appointmentvo.setCode(x: code)
-
-	      res.append(appointmentvo)
-	    }
-	    sqlite3_finalize(queryStatement)
-	    return res
+	  { 
+	  	let statement : String = "SELECT * FROM Appointment WHERE appointmentId = " + "'" + val + "'" 
+	  	return setDataAppointment(statement: statement)
 	  }
 	  
   func searchByAppointmentcode(val : String) -> [AppointmentVO]
-	  { var res : [AppointmentVO] = [AppointmentVO]()
-	    let statement : String = "SELECT * FROM Appointment WHERE code = " + "'" + val + "'" 
-	    let queryStatement = try? prepareStatement(sql: statement)
-	    
-	    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-	    { //let id = sqlite3_column_int(queryStatement, 0)
-	      let appointmentvo = AppointmentVO()
-	      
-	      guard let queryResultAppointmentCOLAPPOINTMENTID = sqlite3_column_text(queryStatement, 4)
-		      else { return res }	      
-		      let appointmentId = String(cString: queryResultAppointmentCOLAPPOINTMENTID)
-		      appointmentvo.setAppointmentId(x: appointmentId)
-	      guard let queryResultAppointmentCOLCODE = sqlite3_column_text(queryStatement, 5)
-		      else { return res }	      
-		      let code = String(cString: queryResultAppointmentCOLCODE)
-		      appointmentvo.setCode(x: code)
-
-	      res.append(appointmentvo)
-	    }
-	    sqlite3_finalize(queryStatement)
-	    return res
+	  { 
+	  	let statement : String = "SELECT * FROM Appointment WHERE code = " + "'" + val + "'" 
+	  	return setDataAppointment(statement: statement)
 	  }
 	  
 
@@ -229,5 +172,28 @@ class DB {
   deinit
   { sqlite3_close(self.dbPointer) }
 
+  func setDataAppointment(statement: String) -> [AppointmentVO] {
+          var res : [AppointmentVO] = [AppointmentVO]()
+          let queryStatement = try? prepareStatement(sql: statement)
+          
+          while (sqlite3_step(queryStatement) == SQLITE_ROW)
+          { 
+            let appointmentvo = AppointmentVO()
+            
+	      guard let queryResultAppointmentColAppointmentId = sqlite3_column_text(queryStatement, 4)
+			      else { return res }	      
+			      let appointmentId = String(cString: queryResultAppointmentColAppointmentId)
+			      appointmentvo.setAppointmentId(x: appointmentId)
+	      guard let queryResultAppointmentColCode = sqlite3_column_text(queryStatement, 5)
+			      else { return res }	      
+			      let code = String(cString: queryResultAppointmentColCode)
+			      appointmentvo.setCode(x: code)
+  
+            res.append(appointmentvo)
+          }
+          sqlite3_finalize(queryStatement)
+          return res
+      }
+      
 }
 
