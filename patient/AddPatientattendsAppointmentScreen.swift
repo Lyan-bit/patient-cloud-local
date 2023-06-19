@@ -12,7 +12,7 @@ struct AddPatientattendsAppointmentScreen: View {
 	  		ScrollView {
     VStack(spacing: 20) {
 	   HStack (spacing: 20) {
-		  Text(":").bold()
+		  Text("patientId:").bold()
 		  Divider()
 	      Picker("Patient", selection: $y) { 
 	      	ForEach(model.currentPatients) { Text($0.patientId).tag($0.patientId)}
